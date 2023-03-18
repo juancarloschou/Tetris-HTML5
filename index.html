@@ -1,0 +1,899 @@
+<html>
+  <head>
+    <style>
+      #tetris1 {
+        background-color: #bff;
+        border: 1px solid #000;
+      }
+      #next-piece1 {
+        background-color: #9dd;
+        border: 1px solid #000;
+      }
+      
+      #tetris2 {
+        background-color: #ffb;
+        border: 1px solid #000;
+      }
+      #next-piece2 {
+        background-color: #dd9;
+        border: 1px solid #000;
+      }
+
+      .botonNext { 
+        margin-top:20px;
+        width: 150px;
+        height: 50px;
+      }
+    </style>
+  </head>
+
+  <body>
+	<div id="panel1" style="float:left">
+		<!-- Canvas for the game grid player 1 -->
+		<canvas id="tetris1" width="350" height="700"></canvas>
+	</div>
+
+    <!-- Add some panel elements for displaying the current level and score player 1 -->
+    <div id="panelScore1" style="float:left; margin-left:10px;">
+      <p>Level: <span id="level1">1</span></p>
+      <p>Score: <span id="score1">0</span></p>
+      <p>Next Piece:</p>
+      <canvas id="next-piece1" width="150" height="150"></canvas>
+      <div id="gameOver1" style="display:none; margin-top:20px;" >
+        <h1>Game Over!</h1>
+        <button id="nextGame1" class="botonNext" onclick="nextGame1()">Next game</button>
+    </div>
+    </div>
+	
+	
+	
+    <div id="panel2" style="float:right">
+      <!-- Canvas for the game grid player 2 -->
+      <canvas id="tetris2" width="350" height="700"></canvas>
+    </div>
+
+    <!-- Add some panel elements for displaying the current level and score player 2 -->
+    <div id="panelScore2" style="float:right; margin-right:10px;">
+      <p>Level: <span id="level2">1</span></p>
+      <p>Score: <span id="score2">0</span></p>
+      <p>Next Piece:</p>
+      <canvas id="next-piece2" width="150" height="150"></canvas>
+      <div id="gameOver2" style="display:none; margin-top:20px;" >
+        <h1>Game Over!</h1>
+        <button id="nextGame2" class="botonNext" onclick="nextGame2()">Next game</button>
+    </div>
+    </div>
+	
+
+
+    <div style="display:none">
+      <!-- Load the square images into memory -->
+      <img src="img/blue.png" id="blue" class="square" width="35" height="35">
+      <img src="img/red.png" id="red" class="square" width="35" height="35">
+      <img src="img/green.png" id="green" class="square" width="35" height="35">
+      <img src="img/sky.png" id="sky" class="square" width="35" height="35">
+      <img src="img/violet.png" id="violet" class="square" width="35" height="35">
+      <img src="img/orange.png" id="orange" class="square" width="35" height="35">
+      <img src="img/yellow.png" id="yellow" class="square" width="35" height="35">
+    </div>
+
+    <script>
+	    // Create an array of the square images
+      const squareImages = [
+        document.getElementById('blue'),
+        document.getElementById('red'),
+        document.getElementById('green'),
+        document.getElementById('sky'),
+        document.getElementById('violet'),
+        document.getElementById('orange'),
+        document.getElementById('yellow'),
+        document.getElementById('sky')
+      ];
+
+      // Define the colors for each piece
+      const colors = [
+        'blue',
+        'red',
+        'green',
+        'sky',
+        'violet',
+        'orange',
+        'yellow',
+        'sky',
+      ];
+
+      // Define the pieces and their rotations
+      const pieces = [
+        // I-Piece 0
+        [
+          [
+            [0, 1, 0, 0],
+            [0, 1, 0, 0],
+            [0, 1, 0, 0],
+            [0, 1, 0, 0]
+          ],
+          [
+            [0, 0, 0, 0],
+            [1, 1, 1, 1],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0]
+          ]
+        ],
+        // J-Piece 1
+        [
+          [
+            [1, 0, 0],
+            [1, 1, 1],
+            [0, 0, 0]
+          ],
+          [
+            [0, 1, 1],
+            [0, 1, 0],
+            [0, 1, 0]
+          ],
+          [
+            [0, 0, 0],
+            [1, 1, 1],
+            [0, 0, 1]
+          ],
+          [
+            [0, 1, 0],
+            [0, 1, 0],
+            [1, 1, 0]
+          ]
+        ],
+        // L-Piece 2
+        [
+          [
+            [0, 0, 1],
+            [1, 1, 1],
+            [0, 0, 0]
+          ],
+          [
+            [0, 1, 0],
+            [0, 1, 0],
+            [0, 1, 1]
+          ],
+          [
+            [0, 0, 0],
+            [1, 1, 1],
+            [1, 0, 0]
+          ],
+          [
+            [1, 1, 0],
+            [0, 1, 0],
+            [0, 1, 0]
+          ]
+        ],
+        // O-Piece 3
+        [
+          [
+            [1, 1],
+            [1, 1]
+          ]
+        ],
+        // S-Piece 4
+        [
+          [
+            [0, 1, 1],
+            [1, 1, 0],
+            [0, 0, 0]
+          ],
+          [
+            [0, 1, 0],
+            [0, 1, 1],
+            [0, 0, 1]
+          ]
+        ],
+        // T-Piece 5
+        [
+          [
+            [0, 1, 0],
+            [1, 1, 1],
+            [0, 0, 0]
+          ],
+          [
+            [0, 1, 0],
+            [0, 1, 1],
+            [0, 1, 0]
+          ],
+          [
+            [0, 0, 0],
+            [1, 1, 1],
+            [0, 1, 0]
+          ],
+          [
+            [0, 1, 0],
+            [1, 1, 0],
+            [0, 1, 0]
+          ]
+        ],
+        // Z-Piece 6
+        [
+          [
+            [1, 1, 0],
+            [0, 1, 1],
+            [0, 0, 0]
+          ],
+          [
+            [0, 0, 1],
+            [0, 1, 1],
+            [0, 1, 0]
+          ]
+        ],
+        // larga-10 7
+        [
+          [
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          ],
+          [
+            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+          ]          
+        ],
+      ];
+
+
+
+      // Create a 2D array to represent the Tetris grid of player 1 and 2
+      //const grid = [[0, 1], [...Array(20).keys()], [...Array(10).keys()]];
+      const grid = [0, 1];
+      for (let player = 0; player < grid.length; player++) {
+        grid[player] = [...Array(20).keys()];
+        for (let y = 0; y < grid[0].length; y++) {
+          grid[player][y] = [...Array(10).keys()];
+          for (let x = 0; x < grid[player][y].length; x++) {
+            grid[player][y][x] = null;
+          }
+        }
+      }
+
+      // declare the game variables player 1 and 2
+      let game = [];
+      gameEmpty = {
+        currentPiece: null,
+        currentPieceIndex: null,
+        currentRotation: null,
+        currentX: null,
+        currentY: null,
+        nextPiece: null,
+        nextPieceIndex: null,
+        score: null,
+        level: null,
+        speed: null,
+        speedCounter: null,
+        speedDown: null,
+        speedDownCounter: null,
+        gameover: null,
+        waitingStartGame: null,
+        canMoveLeft: null,
+        canMoveRight: null,
+        canMoveDown: null,
+        canMoveUp: null,
+        pressedMoveDown: null,
+        moveLeft: null, 
+        moveUp: null, 
+        moveRight: null, 
+        moveDown: null
+      };
+      game[0] = gameEmpty;
+      game[1] = gameEmpty;
+
+      const input = [];
+      input[0] = {
+        left: 68, // D
+        up: 82, // R
+        right: 71, // G
+        down: 70 // F
+      }
+      input[1] = {
+        left: 37, // Left arrow
+        up: 38, // Up arrow
+        right: 39, // Right arrow
+        down: 40 // Down arrow
+      }
+
+
+
+      // inicialize game both players
+      initGame(0);
+      initGame(1);
+
+      // register the input events both players
+      registerInputs();
+
+      // start game both players
+      gameLoop1();
+      gameLoop2();
+
+
+      
+      function initGame(player)
+      {
+        // Initialize the game variables
+        game[player] = {
+          currentPiece: null,
+          currentRotation: 0,
+          currentX: 4,
+          currentY: 0,
+          nextPiece: null,
+          score: 0,
+          level: 1,
+          speed: 50,
+          speedCounter: 0,
+          speedDown: 4,
+          speedDownCounter: 0,
+          gameover: false,
+          waitingStartGame: false,
+          canMoveLeft: true,
+          canMoveRight: true,
+          canMoveDown: true,
+          canMoveUp: true,
+          pressedMoveDown: false,
+          moveLeft: false,
+          moveUp: false,
+          moveRight: false,
+          moveDown: false
+        }
+
+        //clear the grid
+        for (let y = 0; y < grid[0].length; y++) {
+          for (let x = 0; x < grid[player][y].length; x++) {
+            grid[player][y][x] = null;
+          }
+        }
+
+        // Set the initial current piece and next piece
+        game[player].currentPieceIndex = randomPiece();
+        //console.log("game[player].currentPieceIndex", game[player].currentPieceIndex);
+        game[player].currentPiece = pieces[game[player].currentPieceIndex];
+        setCurrentPosition(player);
+        game[player].nextPieceIndex = randomPiece();
+        //console.log("game[player].nextPieceIndex", game[player].nextPieceIndex);
+        game[player].nextPiece = pieces[game[player].nextPieceIndex];
+
+        // Set the initial position for the current piece
+        setPiece(player, game[player].currentPiece, game[player].currentX, game[player].currentY, game[player].currentRotation);
+      }
+
+      function setCurrentPosition(player)
+      {
+        if(game[player].currentPieceIndex == 7) //larga-10
+        {
+          game[player].currentX = 0;
+          game[player].currentY = -4;
+        }
+        else
+        {
+          game[player].currentX = 4;
+          game[player].currentY = 0;
+        }
+      }
+
+      // Handle keyboard input player 1 and 2
+      function registerInputs() {
+        document.addEventListener('keydown', event => {
+          for(player = 0; player < 2; player++) {
+            switch (event.keyCode) {
+              case input[player].left: // D or UP
+                game[player].moveLeft = true;
+                break;
+              case input[player].up: // R or UP
+                game[player].moveUp = true;
+                break;
+              case input[player].right: // G or RIGHT
+                game[player].moveRight = true;
+                break;
+              case input[player].down: // F or DOWN
+                game[player].moveDown = true;
+                break;
+              }
+            }
+        });
+        
+        document.addEventListener('keyup', event => {
+          for(player = 0; player < 2; player++) {
+            switch (event.keyCode) {
+              case input[player].left: // D
+                game[player].moveLeft = false;
+                break;
+              case input[player].up: // R
+                game[player].moveUp = false;
+                break;
+              case input[player].right: // G
+                game[player].moveRight = false;
+                break;
+              case input[player].down: // F
+                game[player].moveDown = false;
+                break;
+            }
+          }
+        });
+      }
+
+      // Generate a random piece
+      function randomPiece() {
+        if(Math.floor(Math.random() * 20) == 0) { //20
+          return 7;
+        }
+        else {
+          // Pick a random index for the pieces array except larga-10
+          return Math.floor(Math.random() * (pieces.length - 1));
+        }
+      }
+	  
+      // Create a function to draw the grid
+      function drawGrid(player) {
+        // Get the canvas and context
+        let canvas;
+        if(player == 0) {
+          canvas = document.getElementById('tetris1');
+        }
+        else if(player == 1) {
+          canvas = document.getElementById('tetris2');
+        }
+        const ctx = canvas.getContext('2d');
+
+        // Clear the canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Iterate through the grid and draw each square
+        for (let y = 0; y < grid[player].length; y++) {
+          for (let x = 0; x < grid[player][y].length; x++) {
+            // Get the color of the square
+            const color = grid[player][y][x];
+
+            if (color) {
+              // Draw the square image on the canvas
+              ctx.drawImage(squareImages[colors.indexOf(color)], x * 35, y * 35);
+            }
+          }
+        }
+      }
+
+      // Create a function to draw the next piece
+      function drawNextPiece(player) {
+        // Get the canvas and context
+        let canvas;
+        if(player == 0) {
+          canvas = document.getElementById('next-piece1');
+        }
+        else {
+          canvas = document.getElementById('next-piece2');
+        }
+        const ctx = canvas.getContext('2d');
+
+        // Clear the canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        var positionX = 0;
+        var positionY = 0;
+        if (game[player].nextPieceIndex == 7) //larga-10
+        {
+          positionX = 0;
+          positionY = 4;
+        }
+
+        // Iterate through the grid and draw each square
+        //console.log("game[player].nextPiece", game[player].nextPiece);
+        for (let y = positionY; y < game[player].nextPiece[0].length; y++) {
+          for (let x = positionX; x < game[player].nextPiece[0][y-positionY].length; x++) {
+            if (game[player].nextPiece[0][y][x]) {
+              // Draw the square image on the canvas
+              ctx.drawImage(squareImages[game[player].nextPieceIndex], (x - positionX) * 35, (y - positionY) * 35);
+            }
+          }
+        }		
+      }
+
+      // Create a function to move the current piece down
+      function moveDown(player) {
+        // Clear the current position
+        unsetPiece(player, game[player].currentPiece, game[player].currentX, game[player].currentY);
+
+        // Check if the piece can move down
+        if (canMove(player, 0, 1)) {
+          // Update the current position
+          game[player].currentY++;
+
+          // Set the piece at the new position
+          setPiece(player, game[player].currentPiece, game[player].currentX, game[player].currentY, game[player].currentRotation);
+        } 
+        else 
+        {
+          // Set the piece at the current position
+          setPiece(player, game[player].currentPiece, game[player].currentX, game[player].currentY, game[player].currentRotation);
+
+          // If the piece cannot move down, lock it in place
+          lockPiece(player);
+        }
+      }
+
+      // Create a function to move the current piece left
+      function moveLeft(player) {
+        // Clear the current position
+        unsetPiece(player, game[player].currentPiece, game[player].currentX, game[player].currentY);
+
+        // Check if the piece can move left
+        if (canMove(player, -1, 0)) {
+          // Update the current position
+          game[player].currentX--;
+
+          // Set the piece at the new position
+          setPiece(player, game[player].currentPiece, game[player].currentX, game[player].currentY, game[player].currentRotation);
+        }
+        else
+        {
+          // Set the piece at the current position
+          setPiece(player, game[player].currentPiece, game[player].currentX, game[player].currentY, game[player].currentRotation);
+        }
+      }
+
+      // Create a function to move the current piece right
+      function moveRight(player) {
+        // Clear the current position
+        unsetPiece(player, game[player].currentPiece, game[player].currentX, game[player].currentY);
+
+        // Check if the piece can move right
+        if (canMove(player, 1, 0)) {
+          // Update the current position
+          game[player].currentX++;
+
+          // Set the piece at the new position
+          setPiece(player, game[player].currentPiece, game[player].currentX, game[player].currentY, game[player].currentRotation);
+        }
+        else
+        {
+          // Set the piece at the current position
+          setPiece(player, game[player].currentPiece, game[player].currentX, game[player].currentY, game[player].currentRotation);
+        }
+      }
+
+      // Create a function to rotate the current piece
+      function rotate(player) {
+	      // Clear the current position
+        unsetPiece(player, game[player].currentPiece, game[player].currentX, game[player].currentY);
+		
+        // Check if the piece can rotate
+        if (canRotate(player)) {
+
+          // Update the current rotation
+          game[player].currentRotation = (game[player].currentRotation + 1) % game[player].currentPiece.length;
+
+          // Set the piece at the new position
+          setPiece(player, game[player].currentPiece, game[player].currentX, game[player].currentY, game[player].currentRotation);
+        }
+        else {
+          // Set the piece at the current position
+          setPiece(player, game[player].currentPiece, game[player].currentX, game[player].currentY, game[player].currentRotation);
+        }
+      }
+
+      // Create a function to check if the current piece can move to a new position
+      function canMove(player, deltaX, deltaY) {
+        // Iterate through the piece grid and check if any of the squares are out of bounds or occupied
+        for (let y = 0; y < game[player].currentPiece[game[player].currentRotation].length; y++) {
+          for (let x = 0; x < game[player].currentPiece[game[player].currentRotation][y].length; x++) {
+            if (game[player].currentPiece[game[player].currentRotation][y][x]) {
+              // Calculate the new position for the square
+              const newX = game[player].currentX + x + deltaX;
+              const newY = game[player].currentY + y + deltaY;
+
+              // Check if the square is out of bounds
+              if (newX < 0 || newX >= 10 || newY >= 20) {
+                return false;
+              }
+
+              // Check if the square is occupied (if its or over the top then ok)
+              if (newY >= 0 && grid[player][newY][newX]) {
+                return false;
+              }
+            }
+          }
+        }
+
+        return true;
+      }
+
+	    function canRotate(player) {
+        // Save the current position and rotation
+        const tempX = game[player].currentX;
+        const tempY = game[player].currentY;
+        const tempRotation = game[player].currentRotation;
+
+        // Update the rotation
+        game[player].currentRotation = (game[player].currentRotation + 1) % game[player].currentPiece.length;
+
+        // Check if the piece can move to the new position
+        const canRotate = canMove(player, 0, 0);
+
+        // Restore the position and rotation
+        game[player].currentX = tempX;
+        game[player].currentY = tempY;
+        game[player].currentRotation = tempRotation;
+
+        return canRotate;
+      }
+
+      // Create a function to lock the current piece in his place and get a new piece
+      function lockPiece(player) {
+        // Iterate through the piece grid and set the squares on the grid array
+        for (let y = 0; y < game[player].currentPiece[game[player].currentRotation].length; y++) {
+          for (let x = 0; x < game[player].currentPiece[game[player].currentRotation][y].length; x++) {
+            if (game[player].currentPiece[game[player].currentRotation][y][x]) {
+              grid[player][game[player].currentY + y][game[player].currentX + x] = colors[game[player].currentPieceIndex];
+            }
+          }
+        }
+
+        // Check for completed lines
+        checkLines(player);
+
+        // Generate a new piece
+        game[player].currentPieceIndex = game[player].nextPieceIndex;
+        game[player].currentPiece = pieces[game[player].currentPieceIndex];
+        game[player].currentRotation = 0;
+        setCurrentPosition(player);
+        game[player].nextPieceIndex = randomPiece();
+        game[player].nextPiece = pieces[game[player].nextPieceIndex];
+
+        // Draw the next piece
+        drawNextPiece(player);
+
+        // Check if the game is over
+        if (!canMove(player,0, 0)) {
+          gameOver(player);
+        }
+
+        // Set the initial position for the current piece
+        setPiece(player, game[player].currentPiece, game[player].currentX, game[player].currentY, game[player].currentRotation);
+
+        game[player].canMoveDown = false;
+      }
+
+      // Create a function to check for completed lines
+      function checkLines(player) {
+        // Initialize a variable to keep track of the number of lines completed
+        let linesCompleted = 0;
+
+        // Iterate through the grid and check for completed lines
+        for (let y = 0; y < grid[player].length; y++) {
+          // Initialize a flag to determine if the line is completed
+          let lineCompleted = true;
+
+          for (let x = 0; x < grid[player][y].length; x++) {
+            // If any square is null, the line is not completed
+            if (!grid[player][y][x]) {
+              lineCompleted = false;
+              break;
+            }
+          }
+
+          // If the line is completed, remove it and move the lines above it down
+          if (lineCompleted) {
+            linesCompleted++;
+            grid[player].splice(y, 1);
+            grid[player].unshift(new Array(10).fill(null));
+            y--;
+          }
+        }
+
+        // Update the score based on the number of lines completed
+        if (linesCompleted > 0) {
+          game[player].score += linesCompleted * linesCompleted * 100;
+          if(player == 0)
+            document.getElementById('score1').textContent = game[player].score;
+          else if (player == 1)
+            document.getElementById('score2').textContent = game[player].score;
+        }
+
+        // Check if the player has reached the next level
+        if (game[player].score >= (game[player].level + 1) * 1000) {
+          game[player].level++;
+          if(player == 0)
+            document.getElementById('level1').textContent = game[player].level;
+          else if (player == 1)
+            document.getElementById('level2').textContent = game[player].level;
+
+          if(game[player].speed > 25)
+            game[player].speed -= 3;
+          else if(game[player].speed > 10)
+            game[player].speed -= 2;
+          else
+            game[player].speed -= 1;
+          if(game[player].speed <= 4)
+            game[player].speed = 4;
+        }
+      }
+
+      function setPiece(player, piece, x, y, rotation) {
+        // Iterate through the piece grid and set the squares on the grid array
+        for (let i = 0; i < piece[rotation].length; i++) {
+          for (let j = 0; j < piece[rotation][i].length; j++) {
+            if (piece[rotation][i][j] && y+i >= 0) {
+              grid[player][y + i][x + j] = colors[game[player].currentPieceIndex];
+            }
+          }
+        }
+      }
+
+      function unsetPiece(player, piece, x, y) {
+        // Iterate through the piece grid and set the squares on the grid array to null
+        for (let i = 0; i < piece[game[player].currentRotation].length; i++) {
+          for (let j = 0; j < piece[game[player].currentRotation][i].length; j++) {
+            if (piece[game[player].currentRotation][i][j] && y+i >= 0) {
+              grid[player][y + i][x + j] = null;
+            }
+          }
+        }
+      }
+
+      // Create a function to handle the game over event
+      function gameOver(player) {
+        if(!game[player].gameover) {
+          //clearInterval(intervalId);
+          //alert('Game Over');
+          game[player].gameover = true;
+        }
+      }
+
+      function setGameOver(player) {
+        if(player == 0)
+          document.getElementById('gameOver1').style.display = 'block';
+        else if(player == 1)
+          document.getElementById('gameOver2').style.display = 'block';
+        game[player].waitingStartGame = true;
+      }
+
+      function nextGame1(player)
+      {
+        document.getElementById('gameOver1').style.display = 'none';
+        initGame(0);
+        document.getElementById('score1').textContent = game[0].score;
+        document.getElementById('level1').textContent = game[0].level;
+        gameLoop1();
+      }
+
+      function nextGame2()
+      {
+        document.getElementById('gameOver2').style.display = 'none';
+        initGame(1);
+        document.getElementById('score2').textContent = game[1].score;      
+        document.getElementById('level2').textContent = game[1].level;
+        gameLoop2();
+      }
+
+
+
+      // game loop
+      function draw(player) {
+        // Draw the initial grid
+        drawGrid(player);
+
+        // Draw the initial next piece
+        drawNextPiece(player);
+      }
+
+        // Handle keyboard input player 1 and 2
+      function inputs(player) {
+        if (game[player].moveLeft) { // D or UP
+          if(game[player].canMoveLeft)
+          {
+            moveLeft(player);
+            game[player].canMoveLeft = false;
+          }
+        }
+        else
+          game[player].canMoveLeft = true;
+
+        if (game[player].moveUp) { // R or UP
+          if(game[player].canMoveUp)
+          {
+            rotate(player);
+            game[player].canMoveUp = false;
+          }
+        }
+        else
+          game[player].canMoveUp = true;
+
+        if (game[player].moveRight) { // G or RIGHT
+          if(game[player].canMoveRight)
+          {
+            moveRight(player);
+            game[player].canMoveRight = false;
+          }
+        }
+        else
+          game[player].canMoveRight = true;
+
+        if(game[player].moveDown) { // F or DOWN
+            if(game[player].canMoveDown)
+            {
+              if(!game[player].pressedMoveDown)
+              {
+                moveDown(player);
+                game[player].pressedMoveDown = true;
+                game[player].speedDownCounter = 0;
+              }
+              else
+              {
+                game[player].speedDownCounter++;
+                if(game[player].speedDownCounter >= game[player].speedDown)
+                {
+                  moveDown(player);
+                  game[player].speedDownCounter = 0;
+                }
+              }
+            }
+        }
+        else {
+          game[player].canMoveDown = true;
+          game[player].pressedMoveDown = false;
+          game[player].speedDownCounter = 0;
+        }
+      }
+      
+      function update(player) {
+        //gravity
+        game[player].speedCounter++;
+        if(game[player].speedCounter >= game[player].speed)
+        {
+          game[player].speedCounter = 0;
+          moveDown(player);
+        }
+      }
+      
+      // Game loop for player 1
+      function gameLoop1() {
+        //player 1
+        if(!game[0].gameover)
+        {
+          inputs(0);
+          update(0);
+          draw(0);
+          requestAnimationFrame(gameLoop1);
+        }
+        else if(!game[0].waitingStartGame)
+        {
+          setGameOver(0);
+          requestAnimationFrame(gameLoop1);
+        }
+      }
+
+      // Game loop for player 2
+      function gameLoop2() {
+        //player 2
+        if(!game[1].gameover)
+        {
+          inputs(1);
+          update(1);
+          draw(1);
+          requestAnimationFrame(gameLoop2);
+        }
+        else if(!game[1].waitingStartGame)
+        {
+          setGameOver(1);
+          requestAnimationFrame(gameLoop2);
+        }
+      }
+    
+    </script>
+  </body>
+</html>
